@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: interviewprep-backend
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/interviewprep}
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  port: ${PORT:5000}
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain,text/css,text/javascript,application/javascript
+    min-response-size: 1024
+
+app:
+  ai:
+    api-key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-2.5-flash}
+    connect-timeout-ms: ${AI_CONNECT_TIMEOUT_MS:15000}
+    request-timeout-ms: ${AI_REQUEST_TIMEOUT_MS:30000}
+    max-retries: ${AI_MAX_RETRIES:2}
+    max-prompt-length: ${AI_MAX_PROMPT_LENGTH:12000}
+    max-system-prompt-length: ${AI_MAX_SYSTEM_PROMPT_LENGTH:4000}
+  jwt:
+    secret: ${JWT_SECRET:change-this-super-secret-key-for-production-1234567890}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,https://raswatigithub.github.io}
+  rate-limit:
+    auth-requests-per-minute: ${AUTH_RATE_LIMIT_PER_MINUTE:20}
+    ai-requests-per-minute: ${AI_RATE_LIMIT_PER_MINUTE:12}
+    general-requests-per-minute: ${GENERAL_RATE_LIMIT_PER_MINUTE:120}
+
+logging:
+  level:
+    root: INFO
+    com.interviewprep.backend: INFO
