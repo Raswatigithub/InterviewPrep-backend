@@ -4,6 +4,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/interviewprep}
+      database: ${MONGODB_DATABASE:interviewprep}
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
@@ -25,7 +26,7 @@ app:
     max-prompt-length: ${AI_MAX_PROMPT_LENGTH:12000}
     max-system-prompt-length: ${AI_MAX_SYSTEM_PROMPT_LENGTH:4000}
   jwt:
-    secret: ${JWT_SECRET:change-this-super-secret-key-for-production-1234567890}
+    secret: ${JWT_SECRET:interviewprep-super-secret-key-2026}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   cors:
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,https://raswatigithub.github.io}
