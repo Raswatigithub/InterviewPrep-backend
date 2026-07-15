@@ -1,0 +1,39 @@
+# Maven target directory
+/target/
+
+# IntelliJ and IDE config
+/.idea/
+*.iml
+
+# VS Code settings
+.vscode/
+
+# Logs and crash reports
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+
+# Build output
+*.class
+*.jar
+*.war
+*.ear
+
+# Generated sources
+/generated-sources/
+
+# Local Maven repositories
+/.mvn/
+
+# Temporary files
+*.tmp
+*.swp
+*~

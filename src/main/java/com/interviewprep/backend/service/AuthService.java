@@ -1,9 +1,11 @@
 package com.interviewprep.backend.service;
 
 import java.time.Instant;
+import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,11 +30,10 @@ public class AuthService {
     private final UserRepository userRepository;
 
     public AuthService(
-        AuthenticationManager authenticationManager,
-        JwtService jwtService,
-        PasswordEncoder passwordEncoder,
-        UserRepository userRepository
-    ) {
+            AuthenticationManager authenticationManager,
+            JwtService jwtService,
+            PasswordEncoder passwordEncoder,
+            UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
@@ -40,8 +41,8 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
-        String normalizedEmail = TextSanitizer.sanitizePrompt(request.getEmail(), 150).toLowerCase();
-        if (userRepository.existsByEmail(normalizedEmail)) {
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new ApiException(HttpStatus.CONFLICT, "Email is already registered.");
         }
 
@@ -58,21 +59,29 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request) {
-        String normalizedEmail = TextSanitizer.sanitizePrompt(request.getEmail(), 150).toLowerCase();
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
-        );
+        String normalizedEmail = normalizeEmail(request.getEmail());
 
-        User user = userRepository.findByEmail(authentication.getName())
-            .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword()));
 
-        return buildAuthResponse(user);
+            User user = userRepository.findByEmailIgnoreCase(authentication.getName())
+                    .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
+
+            return buildAuthResponse(user);
+        } catch (BadCredentialsException exception) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
+        }
     }
 
     public UserResponse getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found."));
+        User user = userRepository.findByEmailIgnoreCase(normalizeEmail(email))
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found."));
         return toUserResponse(user);
+    }
+
+    private String normalizeEmail(String email) {
+        return TextSanitizer.sanitizePrompt(email, 150).trim().toLowerCase(Locale.ROOT);
     }
 
     private AuthResponse buildAuthResponse(User user) {

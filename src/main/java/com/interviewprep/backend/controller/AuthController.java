@@ -3,6 +3,7 @@ package com.interviewprep.backend.controller;
 import java.security.Principal;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,28 +34,30 @@ public class AuthController {
 
     @PostMapping("/register")
     public org.springframework.http.ResponseEntity<ApiResponse<AuthResponse>> register(
-        @Valid @RequestBody RegisterRequest request
-    ) {
+            @Valid @RequestBody RegisterRequest request) {
         return ApiResponses.created("User registered successfully.", authService.register(request));
     }
 
     @PostMapping("/login")
     public org.springframework.http.ResponseEntity<ApiResponse<AuthResponse>> login(
-        @Valid @RequestBody AuthRequest request
-    ) {
+            @Valid @RequestBody AuthRequest request) {
         return ApiResponses.ok("Login successful.", authService.login(request));
     }
 
     @PostMapping("/logout")
     public org.springframework.http.ResponseEntity<ApiResponse<Map<String, String>>> logout() {
         return ApiResponses.ok(
-            "Logout successful.",
-            Map.of("message", "Logout is handled by deleting the stored JWT on the client.")
-        );
+                "Logout successful.",
+                Map.of("message", "Logout is handled by deleting the stored JWT on the client."));
     }
 
     @GetMapping("/me")
     public org.springframework.http.ResponseEntity<ApiResponse<UserResponse>> me(Principal principal) {
+        if (principal == null || principal.getName() == null || "anonymousUser".equals(principal.getName())) {
+            throw new com.interviewprep.backend.exception.ApiException(HttpStatus.UNAUTHORIZED,
+                    "Authentication required.");
+        }
+
         return ApiResponses.ok("Current user loaded successfully.", authService.getCurrentUser(principal.getName()));
     }
 }
