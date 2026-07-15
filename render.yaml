@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: interviewprep-backend
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    buildCommand: mvn -DskipTests package
+    startCommand: java -jar target/*.jar
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
