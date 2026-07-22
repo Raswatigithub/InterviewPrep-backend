@@ -15,16 +15,19 @@ public class AiProperties {
     private String apiKey;
     private String model = "gemini-2.5-flash";
     @Min(1000)
-    private int connectTimeoutMs = 15000;
+    private int connectTimeoutMs = 5000;
     @Min(1000)
-    private int requestTimeoutMs = 30000;
+    private int requestTimeoutMs = 10000;
     @Min(0)
     @Max(5)
-    private int maxRetries = 2;
+    private int maxRetries = 0;
     @Min(100)
-    private int maxPromptLength = 12000;
+    private int maxPromptLength = 6000;
     @Min(100)
-    private int maxSystemPromptLength = 4000;
+    private int maxSystemPromptLength = 2000;
+    @Min(64)
+    @Max(8192)
+    private int maxOutputTokens = 768;
 
     public String getApiKey() {
         return apiKey;
@@ -80,5 +83,13 @@ public class AiProperties {
 
     public void setMaxSystemPromptLength(int maxSystemPromptLength) {
         this.maxSystemPromptLength = maxSystemPromptLength;
+    }
+
+    public int getMaxOutputTokens() {
+        return maxOutputTokens;
+    }
+
+    public void setMaxOutputTokens(int maxOutputTokens) {
+        this.maxOutputTokens = maxOutputTokens;
     }
 }

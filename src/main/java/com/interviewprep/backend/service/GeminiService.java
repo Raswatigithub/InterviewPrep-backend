@@ -69,9 +69,17 @@ public class GeminiService {
         RuntimeException lastException = null;
 
         for (int attempt = 0; attempt <= aiProperties.getMaxRetries(); attempt += 1) {
+            long startedAt = System.currentTimeMillis();
             try {
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                long durationMs = System.currentTimeMillis() - startedAt;
                 JsonNode json = objectMapper.readTree(response.body());
+                logger.info(
+                    "gemini_request_completed status={} attempt={} durationMs={}",
+                    response.statusCode(),
+                    attempt + 1,
+                    durationMs
+                );
 
                 if (response.statusCode() < 200 || response.statusCode() >= 300) {
                     String providerMessage = json.path("error").path("message").asText("Gemini request failed.");
@@ -114,14 +122,21 @@ public class GeminiService {
 
                 return text;
             } catch (HttpTimeoutException exception) {
-                logger.warn("gemini_request_timeout attempt={}", attempt + 1);
+                long durationMs = System.currentTimeMillis() - startedAt;
+                logger.warn("gemini_request_timeout attempt={} durationMs={}", attempt + 1, durationMs);
                 lastException = new ApiException(
                     HttpStatus.GATEWAY_TIMEOUT,
                     "AI request timed out. Please try again.",
                     "AI_TIMEOUT"
                 );
             } catch (IOException exception) {
-                logger.warn("gemini_request_io_error attempt={} message={}", attempt + 1, exception.getMessage());
+                long durationMs = System.currentTimeMillis() - startedAt;
+                logger.warn(
+                    "gemini_request_io_error attempt={} durationMs={} message={}",
+                    attempt + 1,
+                    durationMs,
+                    exception.getMessage()
+                );
                 lastException = new ApiException(
                     HttpStatus.BAD_GATEWAY,
                     "Unable to process AI response right now.",
@@ -165,6 +180,11 @@ public class GeminiService {
                         objectMapper.createObjectNode().put("text", systemPrompt)
                     )
                 )
+            );
+            ((com.fasterxml.jackson.databind.node.ObjectNode) root).set(
+                "generationConfig",
+                objectMapper.createObjectNode()
+                    .put("maxOutputTokens", aiProperties.getMaxOutputTokens())
             );
 
             return objectMapper.writeValueAsString(root);

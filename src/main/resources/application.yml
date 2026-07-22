@@ -20,11 +20,12 @@ app:
   ai:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-2.5-flash}
-    connect-timeout-ms: ${AI_CONNECT_TIMEOUT_MS:15000}
-    request-timeout-ms: ${AI_REQUEST_TIMEOUT_MS:30000}
-    max-retries: ${AI_MAX_RETRIES:2}
-    max-prompt-length: ${AI_MAX_PROMPT_LENGTH:12000}
-    max-system-prompt-length: ${AI_MAX_SYSTEM_PROMPT_LENGTH:4000}
+    connect-timeout-ms: ${AI_CONNECT_TIMEOUT_MS:5000}
+    request-timeout-ms: ${AI_REQUEST_TIMEOUT_MS:10000}
+    max-retries: ${AI_MAX_RETRIES:0}
+    max-prompt-length: ${AI_MAX_PROMPT_LENGTH:6000}
+    max-system-prompt-length: ${AI_MAX_SYSTEM_PROMPT_LENGTH:2000}
+    max-output-tokens: ${AI_MAX_OUTPUT_TOKENS:768}
   jwt:
     secret: ${JWT_SECRET:interviewprep-super-secret-key-2026}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
