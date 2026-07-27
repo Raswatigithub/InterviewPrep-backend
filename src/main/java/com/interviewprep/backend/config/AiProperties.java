@@ -17,7 +17,7 @@ public class AiProperties {
     @Min(1000)
     private int connectTimeoutMs = 5000;
     @Min(1000)
-    private int requestTimeoutMs = 10000;
+    private int requestTimeoutMs = 60000;
     @Min(0)
     @Max(5)
     private int maxRetries = 0;
@@ -27,7 +27,7 @@ public class AiProperties {
     private int maxSystemPromptLength = 2000;
     @Min(64)
     @Max(8192)
-    private int maxOutputTokens = 768;
+    private int maxOutputTokens = 8192;
 
     public String getApiKey() {
         return apiKey;
