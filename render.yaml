@@ -4,12 +4,35 @@ services:
     env: docker
     plan: free
     dockerfilePath: Dockerfile
-    buildCommand: mvn -DskipTests package
-    startCommand: java -jar target/*.jar
+    healthCheckPath: /api/health
     envVars:
       - key: MONGODB_URI
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
+        sync: false          # Set manually in Render dashboard (MongoDB Atlas URI)
       - key: JWT_SECRET
-        sync: false
+        sync: false          # Set manually - use a long random string (min 32 chars)
+      - key: GEMINI_API_KEY
+        sync: false          # Set manually - your Gemini API key
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: JWT_EXPIRATION_MS
+        value: "86400000"
+      - key: ALLOWED_ORIGINS
+        value: https://raswatigithub.github.io
+      - key: AI_CONNECT_TIMEOUT_MS
+        value: "5000"
+      - key: AI_REQUEST_TIMEOUT_MS
+        value: "60000"
+      - key: AI_MAX_RETRIES
+        value: "0"
+      - key: AI_MAX_PROMPT_LENGTH
+        value: "6000"
+      - key: AI_MAX_SYSTEM_PROMPT_LENGTH
+        value: "2000"
+      - key: AI_MAX_OUTPUT_TOKENS
+        value: "4096"
+      - key: AUTH_RATE_LIMIT_PER_MINUTE
+        value: "20"
+      - key: AI_RATE_LIMIT_PER_MINUTE
+        value: "12"
+      - key: GENERAL_RATE_LIMIT_PER_MINUTE
+        value: "120"

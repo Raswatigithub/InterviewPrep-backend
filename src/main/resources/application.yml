@@ -7,6 +7,8 @@ spring:
       database: ${MONGODB_DATABASE:interviewprep}
   lifecycle:
     timeout-per-shutdown-phase: 20s
+  config:
+    import: optional:file:.env[.properties]
 
 server:
   port: ${PORT:5000}

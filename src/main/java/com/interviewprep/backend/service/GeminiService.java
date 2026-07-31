@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.interviewprep.backend.config.AiProperties;
 import com.interviewprep.backend.exception.ApiException;
 import com.interviewprep.backend.util.TextSanitizer;
@@ -47,10 +49,10 @@ public class GeminiService {
         }
 
         String sanitizedPrompt = TextSanitizer.sanitizePrompt(prompt, aiProperties.getMaxPromptLength());
-        String sanitizedSystemPrompt = TextSanitizer.sanitizePrompt(
-            systemPrompt,
-            aiProperties.getMaxSystemPromptLength()
-        );
+        String sanitizedSystemPrompt = systemPrompt != null && !systemPrompt.isBlank()
+            ? TextSanitizer.sanitizePrompt(systemPrompt, aiProperties.getMaxSystemPromptLength())
+            : "";
+
         String requestBody = buildRequestBody(sanitizedPrompt, sanitizedSystemPrompt);
         String endpoint = String.format(
             "%s/%s:generateContent?key=%s",
@@ -94,9 +96,14 @@ public class GeminiService {
                         continue;
                     }
 
+                    HttpStatus status = HttpStatus.resolve(response.statusCode());
+                    if (status == null) {
+                        status = HttpStatus.BAD_GATEWAY;
+                    }
+
                     throw new ApiException(
-                        HttpStatus.BAD_GATEWAY,
-                        "AI provider is temporarily unavailable. Please try again shortly.",
+                        status,
+                        providerMessage,
                         "AI_PROVIDER_ERROR"
                     );
                 }
@@ -159,33 +166,37 @@ public class GeminiService {
 
     private String buildRequestBody(String prompt, String systemPrompt) {
         try {
-            JsonNode root = objectMapper.createObjectNode()
-                .set(
-                    "contents",
-                    objectMapper.createArrayNode().add(
-                        objectMapper.createObjectNode().set(
-                            "parts",
-                            objectMapper.createArrayNode().add(
-                                objectMapper.createObjectNode().put("text", prompt)
-                            )
-                        )
-                    )
-                );
+            ObjectNode root = objectMapper.createObjectNode();
 
-            ((com.fasterxml.jackson.databind.node.ObjectNode) root).set(
-                "systemInstruction",
-                objectMapper.createObjectNode().set(
-                    "parts",
-                    objectMapper.createArrayNode().add(
-                        objectMapper.createObjectNode().put("text", systemPrompt)
-                    )
-                )
-            );
-            ((com.fasterxml.jackson.databind.node.ObjectNode) root).set(
-                "generationConfig",
-                objectMapper.createObjectNode()
-                    .put("maxOutputTokens", aiProperties.getMaxOutputTokens())
-            );
+            // Safely combine system prompt into the main prompt text context as well
+            String finalPrompt = (systemPrompt != null && !systemPrompt.isBlank())
+                ? "System Context Instructions:\n" + systemPrompt + "\n\nUser Prompt:\n" + prompt
+                : prompt;
+
+            ArrayNode partsArray = objectMapper.createArrayNode();
+            partsArray.add(objectMapper.createObjectNode().put("text", finalPrompt));
+
+            ObjectNode contentObject = objectMapper.createObjectNode();
+            contentObject.set("parts", partsArray);
+
+            ArrayNode contentsArray = objectMapper.createArrayNode();
+            contentsArray.add(contentObject);
+            root.set("contents", contentsArray);
+
+            // Add systemInstruction if systemPrompt is present
+            if (systemPrompt != null && !systemPrompt.isBlank()) {
+                ObjectNode sysObject = objectMapper.createObjectNode();
+                ArrayNode sysParts = objectMapper.createArrayNode();
+                sysParts.add(objectMapper.createObjectNode().put("text", systemPrompt));
+                sysObject.set("parts", sysParts);
+                root.set("systemInstruction", sysObject);
+            }
+
+            // Ensure maxOutputTokens is set (defaulting to 4096 or configured maxOutputTokens, minimum 2048)
+            int tokenLimit = Math.max(aiProperties.getMaxOutputTokens(), 4096);
+            ObjectNode genConfig = objectMapper.createObjectNode();
+            genConfig.put("maxOutputTokens", tokenLimit);
+            root.set("generationConfig", genConfig);
 
             return objectMapper.writeValueAsString(root);
         } catch (IOException exception) {

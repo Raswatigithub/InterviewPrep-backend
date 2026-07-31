@@ -6,6 +6,7 @@ import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -69,7 +70,7 @@ public class AuthService {
                     .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
 
             return buildAuthResponse(user);
-        } catch (BadCredentialsException exception) {
+        } catch (BadCredentialsException | InternalAuthenticationServiceException exception) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials.");
         }
     }

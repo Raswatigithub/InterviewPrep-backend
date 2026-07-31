@@ -9,7 +9,6 @@ public class AiGenerateRequest {
     @Size(max = 12000, message = "Prompt is too long.")
     private String prompt;
 
-    @NotBlank(message = "System prompt is required.")
     @Size(max = 4000, message = "System prompt is too long.")
     private String systemPrompt;
 
